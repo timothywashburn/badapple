@@ -165,7 +165,6 @@
 			debug('staged contribution table reset');
 		}
 
-		// Code to draw frames with audio
 		if (play_audio) {
 			debug('starting audio');
 			await audio.play().then(() => {

@@ -1,15 +1,60 @@
 (async () => {
 	try {
+		const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 		console.log('bad apple started');
 
-		if (document.querySelector('#badapple')) {
-			console.log('Program already running');
+		if (hasLabel('inject')) {
+			console.log('Program already injected');
 			return;
 		}
-		let badAppleIdentifier = document.createElement('div');
-		badAppleIdentifier.id = 'badapple';
-		badAppleIdentifier.style.display = 'none';
-		document.body.appendChild(badAppleIdentifier);
+		addLabel('inject');
+
+		let contributionTable = document.querySelector('.js-calendar-graph tbody');
+		while (!contributionTable) {
+			contributionTable = document.querySelector('.js-calendar-graph tbody');
+			await sleep(100);
+		}
+
+		const contributionSettings = document.querySelector('.contributions-setting-menu');
+
+		const divider = contributionSettings.querySelector('.dropdown-divider').cloneNode(true);
+		contributionSettings.appendChild(divider);
+
+		const badAppleButtonContainer = contributionSettings.querySelector('form').cloneNode(true);
+		contributionSettings.appendChild(badAppleButtonContainer);
+		const badAppleButton = badAppleButtonContainer.querySelector('button');
+		badAppleButton.type = 'button';
+		const badAppleButtonCheckmark = badAppleButton.querySelector('svg');
+		badAppleButtonCheckmark.remove();
+		const badAppleButtonTitle = badAppleButton.querySelector('div');
+		badAppleButtonTitle.textContent = 'Bad Apple!!';
+		const badAppleButtonDescription = badAppleButton.querySelector('span');
+		let inactiveText = 'Turning on Bad Apple!! will play Bad Apple!! with your GitHub contribution graph.'
+		let activeText = 'Turning off Bad Apple!! will stop playing Bad Apple!! with your GitHub contribution graph.'
+		badAppleButtonDescription.textContent = inactiveText;
+
+		badAppleButton.addEventListener('click', async () => {
+			if (hasLabel('running')) {
+				addLabel('disable');
+				badAppleButtonDescription.textContent = inactiveText;
+				badAppleButtonCheckmark.remove();
+			} else {
+				addLabel('running');
+				badAppleButtonDescription.textContent = activeText;
+				badAppleButton.insertBefore(badAppleButtonCheckmark, badAppleButtonTitle);
+
+				await display(contributionTable);
+			}
+		});
+	} catch (e) {
+		console.error(e);
+	}
+})();
+
+async function display(contributionTable) {
+	try {
+		const contributionTableSave = contributionTable.cloneNode(true);
 
 		const printDebug = false;
 		const play_audio = true;
@@ -29,25 +74,13 @@
 		const url = chrome.runtime.getURL('video_data.json');
 		const res = await fetch(url);
 		const videoData = await res.json();
-		debug('loaded video data');
 
 		const audio_url = play_audio ? chrome.runtime.getURL('badapple.mp3') : null;
 		const audio = play_audio ? new Audio(audio_url) : null;
 		if (play_audio) {
 			audio.volume = 0.5;
 			audio.currentTime = 1;
-			debug('loaded audio');
-		} else {
-			debug('skipping audio load');
 		}
-
-		const contributionTable = document.querySelector('.js-calendar-graph tbody');
-		const contributionTableSave = contributionTable.cloneNode(true);
-
-		if (!contributionTable) {
-			alert('Could not find contribution table');
-			return;
-		} else debug('found contribution table');
 
 		let genInstructions = [];
 		for (let i = 0; i < rows; i++) {
@@ -98,8 +131,6 @@
 				});
 			}
 		}
-		debug('canvas build instructions created');
-		debug('beginning canvas build animation');
 
 		const generateDiagonalCells = (index) => {
 			for (let column = 0; column < index + 1; column++) {
@@ -124,9 +155,7 @@
 		};
 
 		for (let i = 0; i < rows + columns; i++) generateDiagonalCells(i);
-		debug('staged animation; awaiting completion');
 		await sleep((rows + columns + (brightnessAnimation.length - 1)) * animateFrameSpeed + (randomAnimationDelay * 4));
-		debug('animation should be complete; continuing code execution');
 
 		const setCellBrightness = (rowIndex, columnIndex, brightness) => {
 			const row = contributionTable.children[rowIndex];
@@ -146,7 +175,6 @@
 		}
 
 		let totalFrames = videoData.length;
-		debug(`found ${totalFrames} frame${totalFrames === 1 ? "" : "s"} to animate`);
 
 		const resetContributionTable = () => {
 			for (let i = 0; i < rows - 7; i++) {
@@ -158,21 +186,18 @@
 			}
 			setTimeout(() => {
 				contributionTable.innerHTML = contributionTableSave.innerHTML;
-				debug('contribution table reset');
-				document.querySelector('#badapple').remove();
-				debug('animation finished');
+				removeLabel('running');
+				removeLabel('disable');
 			}, animateFrameSpeed * (rows - 7));
-			debug('staged contribution table reset');
 		}
 
 		if (play_audio) {
-			debug('starting audio');
 			await audio.play().then(() => {
-				debug('beginning animation');
 				let intervalID = setInterval(() => {
+					if (hasLabel('disable')) audio.pause();
+
 					let currentFrameIndex = Math.floor(audio.currentTime * 30);
 					if (currentFrameIndex === totalFrames || audio.ended || audio.paused) {
-						debug('animation complete');
 						clearInterval(intervalID);
 						resetContributionTable();
 						return;
@@ -182,14 +207,12 @@
 			});
 
 		} else {
-			debug('beginning animation');
 			let currentFrameIndex = 30;
 			const drawFramesContinuously = () => {
-				if (currentFrameIndex < totalFrames) {
+				if (currentFrameIndex < totalFrames && !hasLabel('disable')) {
 					drawFrame(currentFrameIndex);
 					currentFrameIndex++;
 				} else {
-					debug('animation complete');
 					clearInterval(intervalId);
 					resetContributionTable();
 				}
@@ -199,4 +222,21 @@
 	} catch (e) {
 		console.error(e);
 	}
-})();
+}
+
+function addLabel(id) {
+	if(hasLabel(id)) return;
+	let badAppleIdentifier = document.createElement('div');
+	badAppleIdentifier.id = 'badapple-' + id;
+	badAppleIdentifier.style.display = 'none';
+	document.body.appendChild(badAppleIdentifier);
+}
+
+function removeLabel(id) {
+	let label = document.querySelector('#badapple-' + id);
+	if (label) label.remove();
+}
+
+function hasLabel(id) {
+	return document.querySelector('#badapple-' + id) != null;
+}

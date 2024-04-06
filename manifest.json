@@ -12,6 +12,13 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*"],
+      "js": ["active.js"],
+      "run_at": "document_idle"
+    }
+  ],
   "action": {
     "default_title": "Bad Apple"
   },
@@ -23,13 +30,18 @@
     "debugger"
   ],
   "host_permissions": [
-    "http://*/*",
-    "https://*/*"
+    "https://*/*",
+    "http://*/*"
   ],
   "web_accessible_resources": [
     {
-      "resources": [ "video_data.json", "badapple.mp3" ],
-      "matches": [ "https://github.com/*" ]
+      "resources": [
+        "video_data.json",
+        "badapple.mp3"
+      ],
+      "matches": [
+        "https://github.com/*"
+      ]
     }
   ],
   "commands": {

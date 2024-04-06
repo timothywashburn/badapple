@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "badapple",
+  "description": "Plays Bad Apple with your GitHub contribution history",
+  "version": "1.0",
+  "icons": {
+    "16": "images/icon16.png",
+    "32": "images/icon32.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Bad Apple"
+  },
+  "permissions": [
+    "tabs",
+    "system.storage",
+    "activeTab",
+    "scripting",
+    "debugger"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [ "video_data.json", "badapple.mp3" ],
+      "matches": [ "https://github.com/*" ]
+    }
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+B",
+        "mac": "Command+B"
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+Chrome extension for playing Bad Apple with your GitHub contribution history

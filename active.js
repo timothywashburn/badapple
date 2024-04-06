@@ -11,7 +11,7 @@
     badAppleIdentifier.style.display = 'none';
     document.body.appendChild(badAppleIdentifier);
 
-    const printDebug = true;
+    const printDebug = false;
     const play_audio = true;
 
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -154,12 +154,14 @@
         setTimeout(() => {
           let row = contributionTable.children[rowIndexToRemove];
           row.remove();
-        }, 500 + animateFrameSpeed * i);
+        }, animateFrameSpeed * i);
       }
       setTimeout(() => {
         contributionTable.innerHTML = contributionTableSave.innerHTML;
         debug('contribution table reset');
-      }, 500 + animateFrameSpeed * (rows - 7));
+        document.querySelector('#badapple').remove();
+        debug('animation finished');
+      }, animateFrameSpeed * (rows - 7));
       debug('staged contribution table reset');
     }
 

@@ -11,12 +11,12 @@
 		addLabel('inject');
 
 		let contributionTable = document.querySelector('.js-calendar-graph tbody');
-		while (!contributionTable) {
+		let contributionSettings = document.querySelector('.contributions-setting-menu');
+		while (!contributionTable || !contributionSettings) {
 			contributionTable = document.querySelector('.js-calendar-graph tbody');
+			contributionSettings = document.querySelector('.contributions-setting-menu');
 			await sleep(100);
 		}
-
-		const contributionSettings = document.querySelector('.contributions-setting-menu');
 
 		const divider = contributionSettings.querySelector('.dropdown-divider').cloneNode(true);
 		contributionSettings.appendChild(divider);

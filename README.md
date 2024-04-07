@@ -11,10 +11,10 @@ Bad Apple is a simple Chrome extension that allows you to play Bad Apple!! with 
     - Enable Developer Mode by toggling the switch at the top right.
     - Click on "Load unpacked" and select the folder where you downloaded the code.
 
-3. **Open/Reload and Log in to GitHub**
+3. **Open/Reload and Log In to GitHub**
 
 4. **Navigate to Contribution Graph**:
     - Go to your GitHub profile page (`github.com/<your-username>`).
     - Click on the "Contribution settings" button located at the top right corner of the contribution graph.
 
-5. **Select "Bad Apple!!"**: From the contribution settings, enable "Bad Apple!!"
+5. **Enable "Bad Apple!!"**

@@ -25,8 +25,6 @@
 		contributionSettings.appendChild(badAppleButtonContainer);
 		const badAppleButton = badAppleButtonContainer.querySelector('button');
 		badAppleButton.type = 'button';
-		const badAppleButtonCheckmark = badAppleButton.querySelector('svg');
-		badAppleButtonCheckmark.remove();
 		const badAppleButtonTitle = badAppleButton.querySelector('div');
 		badAppleButtonTitle.textContent = 'Bad Apple!!';
 		const badAppleButtonDescription = badAppleButton.querySelector('span');
@@ -34,15 +32,21 @@
 		let activeText = 'Turning off Bad Apple!! will stop playing Bad Apple!! with your GitHub contribution graph.'
 		badAppleButtonDescription.textContent = inactiveText;
 
+		const checkmarkString = '<svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-check select-menu-item-icon mt-1"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path></svg>'
+		let badAppleButtonCheckmark = badAppleButton.querySelector('svg');
+		if (badAppleButtonCheckmark) badAppleButtonCheckmark.remove();
+
 		badAppleButton.addEventListener('click', async () => {
 			if (hasLabel('running')) {
 				addLabel('disable');
 				badAppleButtonDescription.textContent = inactiveText;
-				badAppleButtonCheckmark.remove();
+
+				badAppleButtonCheckmark = badAppleButton.querySelector('svg');
+				if (badAppleButtonCheckmark) badAppleButtonCheckmark.remove();
 			} else {
 				addLabel('running');
 				badAppleButtonDescription.textContent = activeText;
-				badAppleButton.insertBefore(badAppleButtonCheckmark, badAppleButtonTitle);
+				badAppleButton.insertAdjacentHTML('afterbegin', checkmarkString);
 
 				await display(contributionTable);
 			}
@@ -56,13 +60,9 @@ async function display(contributionTable) {
 	try {
 		const contributionTableSave = contributionTable.cloneNode(true);
 
-		const printDebug = false;
 		const play_audio = true;
 
 		const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-		const debug = (message) => {
-			if (printDebug) console.log(message);
-		};
 
 		const rows = 40
 		const columns = 53;

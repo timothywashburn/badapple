@@ -1,56 +1,58 @@
 (async () => {
+	const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 	try {
-		const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-		console.log('bad apple started');
-
-		if (hasLabel('inject')) {
-			console.log('Program already injected');
-			return;
-		}
-		addLabel('inject');
-
-		let contributionTable = document.querySelector('.js-calendar-graph tbody');
-		let contributionSettings = document.querySelector('.contributions-setting-menu');
-		while (!contributionTable || !contributionSettings) {
-			contributionTable = document.querySelector('.js-calendar-graph tbody');
-			contributionSettings = document.querySelector('.contributions-setting-menu');
-			await sleep(100);
-		}
-
-		const divider = contributionSettings.querySelector('.dropdown-divider').cloneNode(true);
-		contributionSettings.appendChild(divider);
-
-		const badAppleButtonContainer = contributionSettings.querySelector('form').cloneNode(true);
-		contributionSettings.appendChild(badAppleButtonContainer);
-		const badAppleButton = badAppleButtonContainer.querySelector('button');
-		badAppleButton.type = 'button';
-		const badAppleButtonTitle = badAppleButton.querySelector('div');
-		badAppleButtonTitle.textContent = 'Bad Apple!!';
-		const badAppleButtonDescription = badAppleButton.querySelector('span');
-		let inactiveText = 'Turning on Bad Apple!! will play Bad Apple!! with your GitHub contribution graph.'
-		let activeText = 'Turning off Bad Apple!! will stop playing Bad Apple!! with your GitHub contribution graph.'
-		badAppleButtonDescription.textContent = inactiveText;
-
-		const checkmarkString = '<svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-check select-menu-item-icon mt-1"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path></svg>'
-		let badAppleButtonCheckmark = badAppleButton.querySelector('svg');
-		if (badAppleButtonCheckmark) badAppleButtonCheckmark.remove();
-
-		badAppleButton.addEventListener('click', async () => {
-			if (hasLabel('running')) {
-				addLabel('disable');
-				badAppleButtonDescription.textContent = inactiveText;
-
-				badAppleButtonCheckmark = badAppleButton.querySelector('svg');
-				if (badAppleButtonCheckmark) badAppleButtonCheckmark.remove();
-			} else {
-				addLabel('running');
-				badAppleButtonDescription.textContent = activeText;
-				badAppleButton.insertAdjacentHTML('afterbegin', checkmarkString);
-
-				await display(contributionTable);
+		while (true) {
+			if(hasLabel('inject')) {
+				await sleep(100);
+				continue;
 			}
-		});
+
+			console.log('bad apple started');
+
+			let contributionTable = document.querySelector('.js-calendar-graph tbody');
+			let contributionSettings = document.querySelector('.contributions-setting-menu');
+			while (!contributionTable || !contributionSettings) {
+				contributionTable = document.querySelector('.js-calendar-graph tbody');
+				contributionSettings = document.querySelector('.contributions-setting-menu');
+				await sleep(100);
+			}
+
+			addLabel('inject');
+
+			const divider = contributionSettings.querySelector('.dropdown-divider').cloneNode(true);
+			contributionSettings.appendChild(divider);
+
+			const badAppleButtonContainer = contributionSettings.querySelector('form').cloneNode(true);
+			contributionSettings.appendChild(badAppleButtonContainer);
+			const badAppleButton = badAppleButtonContainer.querySelector('button');
+			badAppleButton.type = 'button';
+			const badAppleButtonTitle = badAppleButton.querySelector('div');
+			badAppleButtonTitle.textContent = 'Bad Apple!!';
+			const badAppleButtonDescription = badAppleButton.querySelector('span');
+			let inactiveText = 'Turning on Bad Apple!! will play Bad Apple!! with your GitHub contribution graph.'
+			let activeText = 'Turning off Bad Apple!! will stop playing Bad Apple!! with your GitHub contribution graph.'
+			badAppleButtonDescription.textContent = inactiveText;
+
+			const checkmarkString = '<svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-check select-menu-item-icon mt-1"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path></svg>'
+			let badAppleButtonCheckmark = badAppleButton.querySelector('svg');
+			if (badAppleButtonCheckmark) badAppleButtonCheckmark.remove();
+
+			badAppleButton.addEventListener('click', async () => {
+				if (hasLabel('running')) {
+					await addLabel('disable');
+					badAppleButtonDescription.textContent = inactiveText;
+
+					badAppleButtonCheckmark = badAppleButton.querySelector('svg');
+					if (badAppleButtonCheckmark) badAppleButtonCheckmark.remove();
+				} else {
+					await addLabel('running');
+					badAppleButtonDescription.textContent = activeText;
+					badAppleButton.insertAdjacentHTML('afterbegin', checkmarkString);
+
+					await display(contributionTable);
+				}
+			});
+		}
 	} catch (e) {
 		console.error(e);
 	}
@@ -229,7 +231,9 @@ function addLabel(id) {
 	let badAppleIdentifier = document.createElement('div');
 	badAppleIdentifier.id = 'badapple-' + id;
 	badAppleIdentifier.style.display = 'none';
-	document.body.appendChild(badAppleIdentifier);
+
+	let contributionTable = document.querySelector('.js-calendar-graph tbody');
+	contributionTable.appendChild(badAppleIdentifier);
 }
 
 function removeLabel(id) {

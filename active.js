@@ -2,7 +2,7 @@
 	const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 	try {
 		while (true) {
-			if(hasLabel('inject')) {
+			if (hasLabel('inject')) {
 				await sleep(100);
 				continue;
 			}
@@ -60,16 +60,19 @@
 
 async function display(contributionTable) {
 	try {
+		const yearlyContributions = document.querySelector('.js-yearly-contributions');
+		const contributionElement = yearlyContributions.querySelector('h2');
+		const contributionElementSave = contributionElement.cloneNode(true);
 		const contributionTableSave = contributionTable.cloneNode(true);
 
 		const play_audio = true;
 
 		const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-		const rows = 40
+		const rows = 40;
 		const columns = 53;
 
-		const animateFrameSpeed = 40;
+		const animateFrameSpeed = 50;
 		const randomAnimationDelay = 300;
 		const brightnessAnimation = [1, 2, 3, 4, 4, 4, 4, 4, 3, 2, 1, 0];
 
@@ -114,7 +117,7 @@ async function display(contributionTable) {
 					if (cell) {
 						if (cell.getAttribute('data-ix')) {
 							cell.setAttribute('data-level', brightness.toString());
-							return
+							return;
 						}
 					} else cell = document.createElement('td');
 
@@ -125,7 +128,7 @@ async function display(contributionTable) {
 					cell.setAttribute('data-date', '2024-01-07');
 					cell.setAttribute('data-level', brightness.toString());
 					cell.setAttribute('role', 'gridcell');
-					cell.setAttribute('id', `contribution-day-component-0-${j}`);
+					cell.setAttribute('id', `contribution-day-component-${i}-${j}`);
 					cell.setAttribute('aria-describedby', 'contribution-graph-legend-level-0');
 					cell.setAttribute('class', 'ContributionCalendar-day');
 					cell.setAttribute('data-view-component', 'true');
@@ -134,7 +137,7 @@ async function display(contributionTable) {
 			}
 		}
 
-		const generateDiagonalCells = (index) => {
+		const generateDiagonalCells = index => {
 			for (let column = 0; column < index + 1; column++) {
 				for (let row = 0; row < index - column + 1; row++) {
 					let rowGenInstructions = genInstructions[row];
@@ -159,21 +162,36 @@ async function display(contributionTable) {
 		for (let i = 0; i < rows + columns; i++) generateDiagonalCells(i);
 		await sleep((rows + columns + (brightnessAnimation.length - 1)) * animateFrameSpeed + (randomAnimationDelay * 4));
 
+		const getCellBrightness = (rowIndex, columnIndex) => {
+			const row = contributionTable.children[rowIndex];
+			const targetCell = row.children[columnIndex + 1];
+			return parseInt(targetCell.getAttribute('data-level'));
+		}
+
 		const setCellBrightness = (rowIndex, columnIndex, brightness) => {
 			const row = contributionTable.children[rowIndex];
 			const targetCell = row.children[columnIndex + 1];
 			targetCell.setAttribute('data-level', brightness.toString());
 		};
 
-		const drawFrame = (frameIndex) => {
+		const setContributions = contributions => {
+			const contributionElement = yearlyContributions.querySelector('h2');
+			let contributionsFormatted = Math.round(contributions).toLocaleString();
+			contributionElement.textContent = `${contributionsFormatted} contribution${contributions === 1 ? "" : "s"} in the last year`;
+		}
+
+		const drawFrame = (frameIndex, totalFrames) => {
 			let frame = videoData[frameIndex];
+			let contributions = 0;
 			for (let rowIndex = 0; rowIndex < frame.length; rowIndex++) {
 				let rowData = frame[rowIndex];
 				for (let columnIndex = 0; columnIndex < rowData.length; columnIndex++) {
-					let cell = rowData[columnIndex];
-					setCellBrightness(rowIndex, columnIndex, cell);
+					let brightness = rowData[columnIndex];
+					setCellBrightness(rowIndex, columnIndex, brightness);
+					contributions += brightness;
 				}
 			}
+			setContributions(contributions * Math.pow(1.01, Math.pow(1.09, frameIndex / totalFrames * 100)));
 		}
 
 		let totalFrames = videoData.length;
@@ -187,7 +205,9 @@ async function display(contributionTable) {
 				}, animateFrameSpeed * i);
 			}
 			setTimeout(() => {
+				contributionElement.innerHTML = contributionElementSave.innerHTML;
 				contributionTable.innerHTML = contributionTableSave.innerHTML;
+
 				removeLabel('running');
 				removeLabel('disable');
 			}, animateFrameSpeed * (rows - 7));
@@ -204,7 +224,7 @@ async function display(contributionTable) {
 						resetContributionTable();
 						return;
 					}
-					drawFrame(currentFrameIndex);
+					drawFrame(currentFrameIndex, totalFrames);
 				}, 1);
 			});
 
@@ -212,7 +232,7 @@ async function display(contributionTable) {
 			let currentFrameIndex = 30;
 			const drawFramesContinuously = () => {
 				if (currentFrameIndex < totalFrames && !hasLabel('disable')) {
-					drawFrame(currentFrameIndex);
+					drawFrame(currentFrameIndex, totalFrames);
 					currentFrameIndex++;
 				} else {
 					clearInterval(intervalId);
@@ -227,13 +247,13 @@ async function display(contributionTable) {
 }
 
 function addLabel(id) {
-	if(hasLabel(id)) return;
+	if (hasLabel(id)) return;
 	let badAppleIdentifier = document.createElement('div');
 	badAppleIdentifier.id = 'badapple-' + id;
 	badAppleIdentifier.style.display = 'none';
 
-	let contributionTable = document.querySelector('.js-calendar-graph tbody');
-	contributionTable.appendChild(badAppleIdentifier);
+	const yearlyContributions = document.querySelector('.js-yearly-contributions');
+	yearlyContributions.appendChild(badAppleIdentifier);
 }
 
 function removeLabel(id) {

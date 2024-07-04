@@ -2,7 +2,7 @@
 	const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 	try {
 		while (true) {
-			if(hasLabel('inject')) {
+			if (hasLabel('inject')) {
 				await sleep(100);
 				continue;
 			}
@@ -227,13 +227,13 @@ async function display(contributionTable) {
 }
 
 function addLabel(id) {
-	if(hasLabel(id)) return;
+	if (hasLabel(id)) return;
 	let badAppleIdentifier = document.createElement('div');
 	badAppleIdentifier.id = 'badapple-' + id;
 	badAppleIdentifier.style.display = 'none';
 
-	let contributionTable = document.querySelector('.js-calendar-graph tbody');
-	contributionTable.appendChild(badAppleIdentifier);
+	const yearlyContributions = document.querySelector('.js-yearly-contributions');
+	yearlyContributions.appendChild(badAppleIdentifier);
 }
 
 function removeLabel(id) {

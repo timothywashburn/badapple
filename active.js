@@ -1,3 +1,5 @@
+let printDebug = false;
+
 (async () => {
 	const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 	try {
@@ -9,49 +11,81 @@
 
 			console.log('bad apple started');
 
-			let contributionTable = document.querySelector('.js-calendar-graph tbody');
-			let contributionSettings = document.querySelector('.contributions-setting-menu');
+			let contributionTable = document.querySelector('.js-calendar-graph-table > tbody');
+			debug('initial contributionTable: ' + contributionTable);
+			let contributionSettings = findContributionSettings();
+			debug('initial contributionSettings: ' + contributionSettings);
+
 			while (!contributionTable || !contributionSettings) {
-				contributionTable = document.querySelector('.js-calendar-graph tbody');
-				contributionSettings = document.querySelector('.contributions-setting-menu');
+				contributionTable = document.querySelector('.js-calendar-graph-table > tbody');
+				debug('contributionTable: ' + contributionTable);
+				contributionSettings = findContributionSettings();
+				debug('contributionSettings: ' + contributionSettings);
 				await sleep(100);
 			}
 
 			addLabel('inject');
 
-			const divider = contributionSettings.querySelector('.dropdown-divider').cloneNode(true);
-			contributionSettings.appendChild(divider);
+			debugRaw('contributionSettings', contributionSettings);
 
-			const badAppleButtonContainer = contributionSettings.querySelector('form').cloneNode(true);
-			contributionSettings.appendChild(badAppleButtonContainer);
-			const badAppleButton = badAppleButtonContainer.querySelector('button');
-			badAppleButton.type = 'button';
-			const badAppleButtonTitle = badAppleButton.querySelector('div');
-			badAppleButtonTitle.textContent = 'Bad Apple!!';
-			const badAppleButtonDescription = badAppleButton.querySelector('span');
-			let inactiveText = 'Turning on Bad Apple!! will play Bad Apple!! with your GitHub contribution graph.'
-			let activeText = 'Turning off Bad Apple!! will stop playing Bad Apple!! with your GitHub contribution graph.'
-			badAppleButtonDescription.textContent = inactiveText;
+			const listItem = document.createElement('li');
+			listItem.setAttribute('data-targets', 'action-list.items');
+			listItem.setAttribute('role', 'none');
+			listItem.setAttribute('data-view-component', 'true');
+			listItem.className = 'ActionListItem';
 
-			const checkmarkString = '<svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-check select-menu-item-icon mt-1"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path></svg>'
-			let badAppleButtonCheckmark = badAppleButton.querySelector('svg');
-			if (badAppleButtonCheckmark) badAppleButtonCheckmark.remove();
+			const form = document.createElement('form');
+			form.setAttribute('role', 'none');
+			form.setAttribute('method', 'post');
+			form.setAttribute('accept-charset', 'UTF-8');
 
-			badAppleButton.addEventListener('click', async () => {
+			const button = document.createElement('button');
+			button.tabIndex = '-1';
+			button.setAttribute('type', 'button');
+			button.setAttribute('role', 'menuitemcheckbox');
+			button.setAttribute('data-view-component', 'true');
+			button.className = 'ActionListContent';
+
+			const visualSpan = document.createElement('span');
+			visualSpan.className = 'ActionListItem-visual ActionListItem-action--leading';
+
+			const descWrap = document.createElement('span');
+			descWrap.setAttribute('data-view-component', 'true');
+			descWrap.className = 'ActionListItem-descriptionWrap';
+
+			const label = document.createElement('span');
+			label.setAttribute('data-view-component', 'true');
+			label.className = 'ActionListItem-label';
+			label.textContent = 'Bad Apple!!';
+
+			const description = document.createElement('span');
+			description.setAttribute('data-view-component', 'true');
+			description.className = 'ActionListItem-description';
+			const inactiveText = 'Turning on Bad Apple!! will play Bad Apple!! with your GitHub contribution graph.';
+			const activeText = 'Turning off Bad Apple!! will stop playing Bad Apple!! with your GitHub contribution graph.';
+			description.textContent = inactiveText;
+
+			descWrap.appendChild(label);
+			descWrap.appendChild(description);
+			button.appendChild(visualSpan);
+			button.appendChild(descWrap);
+			form.appendChild(button);
+			listItem.appendChild(form);
+
+			button.addEventListener('click', async () => {
 				if (hasLabel('running')) {
 					await addLabel('disable');
-					badAppleButtonDescription.textContent = inactiveText;
-
-					badAppleButtonCheckmark = badAppleButton.querySelector('svg');
-					if (badAppleButtonCheckmark) badAppleButtonCheckmark.remove();
+					description.textContent = inactiveText;
+					visualSpan.innerHTML = '';
 				} else {
 					await addLabel('running');
-					badAppleButtonDescription.textContent = activeText;
-					badAppleButton.insertAdjacentHTML('afterbegin', checkmarkString);
-
+					description.textContent = activeText;
+					visualSpan.innerHTML = '<svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-check ActionListItem-singleSelectCheckmark"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path></svg>';
 					await display(contributionTable);
 				}
 			});
+
+			contributionSettings.appendChild(listItem);
 		}
 	} catch (e) {
 		console.error(e);
@@ -226,11 +260,33 @@ async function display(contributionTable) {
 	}
 }
 
+function findContributionSettings() {
+	const privateText = Array.from(document.querySelectorAll('*')).find(
+		el => el.textContent === 'Turning off private contributions will show only public activity on your profile.'
+	);
+	const overviewText = Array.from(document.querySelectorAll('*')).find(
+		el => el.textContent === 'Turning off the activity overview will hide the section on your profile.'
+	);
+
+	if (!privateText || !overviewText) return null;
+
+	let privateParent = privateText.parentElement;
+	while (privateParent) {
+		if (privateParent.contains(overviewText)) {
+			return privateParent.closest('.ActionListWrap');
+		}
+		privateParent = privateParent.parentElement;
+	}
+
+	return null;
+}
+
 function addLabel(id) {
 	if (hasLabel(id)) return;
 	let badAppleIdentifier = document.createElement('div');
 	badAppleIdentifier.id = 'badapple-' + id;
 	badAppleIdentifier.style.display = 'none';
+	debug('added label: ' + id);
 
 	const yearlyContributions = document.querySelector('.js-yearly-contributions');
 	yearlyContributions.appendChild(badAppleIdentifier);
@@ -238,9 +294,27 @@ function addLabel(id) {
 
 function removeLabel(id) {
 	let label = document.querySelector('#badapple-' + id);
-	if (label) label.remove();
+	if (label) {
+		label.remove();
+		debug('label removed: ' + id);
+	} else {
+		debug('label not removed: ' + id);
+	}
 }
 
 function hasLabel(id) {
-	return document.querySelector('#badapple-' + id) != null;
+	let hasLabel = document.querySelector('#badapple-' + id) != null;
+	debug('checking for label: ' + id + ', ' + hasLabel);
+	return hasLabel;
+}
+
+function debug(message) {
+	if (printDebug) console.log('[badapple] ' + message);
+}
+
+function debugRaw(message, object) {
+	if (printDebug) {
+		console.log('[badapple] ' + message);
+		console.log(object);
+	}
 }

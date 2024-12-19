@@ -10,12 +10,17 @@
     "128": "images/icon128.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "src/background.js"
   },
   "content_scripts": [
     {
       "matches": ["https://github.com/*"],
-      "js": ["active.js"],
+      "js": [
+        "src/js/utils.js",
+        "src/js/ui-elements.js",
+        "src/js/display-controller.js",
+        "src/js/main.js"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -36,8 +41,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "video_data.json",
-        "badapple.mp3"
+        "assets/video_data.json",
+        "assets/badapple.mp3"
       ],
       "matches": [
         "https://github.com/*"

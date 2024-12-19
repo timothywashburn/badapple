@@ -134,30 +134,51 @@ async function display(contributionTable) {
 
         if (play_audio) {
             await audio.play().then(() => {
-                let intervalID = setInterval(() => {
-                    if (hasLabel('disable')) audio.pause();
+                let lastRenderTime = performance.now();
+                const frameDelay = 1000 / 30;
 
-                    let currentFrameIndex = Math.floor(audio.currentTime * 30);
-                    if (currentFrameIndex === totalFrames || audio.ended || audio.paused) {
-                        clearInterval(intervalID);
+                function renderFrame() {
+                    if (hasLabel('disable')) {
+                        audio.pause();
                         resetContributionTable();
                         return;
                     }
-                    drawFrame(currentFrameIndex);
-                }, 1);
+
+                    const currentTime = performance.now();
+                    if (currentTime - lastRenderTime >= frameDelay) {
+                        const currentFrameIndex = Math.floor(audio.currentTime * 30);
+                        if (currentFrameIndex === totalFrames || audio.ended || audio.paused) {
+                            resetContributionTable();
+                            return;
+                        }
+                        drawFrame(currentFrameIndex);
+                        lastRenderTime = currentTime;
+                    }
+                    requestAnimationFrame(renderFrame);
+                }
+
+                requestAnimationFrame(renderFrame);
             });
         } else {
             let currentFrameIndex = 30;
-            const drawFramesContinuously = () => {
+            let lastRenderTime = performance.now();
+            const frameDelay = 1000 / 30;  // Target 30fps
+
+            function renderFrame() {
                 if (currentFrameIndex < totalFrames && !hasLabel('disable')) {
-                    drawFrame(currentFrameIndex);
-                    currentFrameIndex++;
+                    const currentTime = performance.now();
+                    if (currentTime - lastRenderTime >= frameDelay) {
+                        drawFrame(currentFrameIndex);
+                        currentFrameIndex++;
+                        lastRenderTime = currentTime;
+                    }
+                    requestAnimationFrame(renderFrame);
                 } else {
-                    clearInterval(intervalId);
                     resetContributionTable();
                 }
-            };
-            const intervalId = setInterval(drawFramesContinuously, 1000 / 30);
+            }
+
+            requestAnimationFrame(renderFrame);
         }
     } catch (e) {
         console.error(e);

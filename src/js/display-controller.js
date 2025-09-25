@@ -13,15 +13,15 @@ async function display(contributionTable) {
         const randomAnimationDelay = 300;
         const brightnessAnimation = [1, 2, 3, 4, 4, 4, 4, 4, 3, 2, 1, 0];
 
-        const url = chrome.runtime.getURL('assets/video_data.json');
+        const url = chrome.runtime.getURL('assets/test_476x360_genshin.json');
         const res = await fetch(url);
         const videoData = await res.json();
 
-        const audio_url = play_audio ? chrome.runtime.getURL('assets/badapple.mp3') : null;
+        const audio_url = play_audio ? chrome.runtime.getURL('assets/genshin_badapple.mp3') : null;
         const audio = play_audio ? new Audio(audio_url) : null;
         if (play_audio) {
             audio.volume = 0.5;
-            audio.currentTime = 1;
+            audio.currentTime = 0;
         }
 
         let genInstructions = [];
@@ -73,30 +73,75 @@ async function display(contributionTable) {
             }
         }
 
-        const generateDiagonalCells = (index) => {
-            for (let column = 0; column < index + 1; column++) {
-                for (let row = 0; row < index - column + 1; row++) {
-                    let rowGenInstructions = genInstructions[row];
-                    if (!rowGenInstructions) continue;
+        // const generateDiagonalCells = (index) => {
+        //     for (let column = 0; column < index + 1; column++) {
+        //         for (let row = 0; row < index - column + 1; row++) {
+        //             let rowGenInstructions = genInstructions[row];
+        //             if (!rowGenInstructions) continue;
+        //             if (rowGenInstructions['row']) {
+        //                 setTimeout(rowGenInstructions['row'], index * animateFrameSpeed);
+        //                 delete rowGenInstructions['row']
+        //             }
+        //             if (rowGenInstructions['cells'][column]) {
+        //                 let random = 0;
+        //                 for (let i = 0; i < brightnessAnimation.length; i++) {
+        //                     let brightness = brightnessAnimation[i];
+        //                     if (i > brightnessAnimation.length / 2 && brightness !== 4) random += Math.random() * randomAnimationDelay;
+        //                     setTimeout(rowGenInstructions['cells'][column], (index + i) * animateFrameSpeed + random, brightness);
+        //                 }
+        //                 delete rowGenInstructions['cells'][column];
+        //             }
+        //         }
+        //     }
+        // };
+
+        // for (let i = 0; i < rows + columns; i++) generateDiagonalCells(i);
+        // await sleep((rows + columns + (brightnessAnimation.length - 1)) * animateFrameSpeed + (randomAnimationDelay * 4));
+
+        // ...existing code...
+
+        // Run left-to-right per row, but rows run concurrently
+        const generateSlideAnimation = async () => {
+            const rowPromises = [];
+
+            for (let row = 0; row < rows; row++) {
+                const rowGenInstructions = genInstructions[row];
+                if (!rowGenInstructions) continue;
+
+                const rowTask = (async () => {
+                
                     if (rowGenInstructions['row']) {
-                        setTimeout(rowGenInstructions['row'], index * animateFrameSpeed);
-                        delete rowGenInstructions['row']
+                        await sleep(animateFrameSpeed);
+                        rowGenInstructions['row']();
+                        delete rowGenInstructions['row'];
                     }
-                    if (rowGenInstructions['cells'][column]) {
-                        let random = 0;
+
+                    for (let column = 0; column < columns; column++) {
+                        if (!rowGenInstructions['cells'] || !rowGenInstructions['cells'][column]) continue;
+
                         for (let i = 0; i < brightnessAnimation.length; i++) {
-                            let brightness = brightnessAnimation[i];
-                            if (i > brightnessAnimation.length / 2 && brightness !== 4) random += Math.random() * randomAnimationDelay;
-                            setTimeout(rowGenInstructions['cells'][column], (index + i) * animateFrameSpeed + random, brightness);
+                            const brightness = brightnessAnimation[i];
+
+                            let random = 0;
+                            if (i > brightnessAnimation.length / 2 && brightness !== 4) {
+                                random = Math.random() * randomAnimationDelay;
+                            }
+
+                            setTimeout(rowGenInstructions['cells'][column], (i * animateFrameSpeed) + random, brightness);
                         }
+
                         delete rowGenInstructions['cells'][column];
                     }
-                }
+                })();
+
+                rowPromises.push(rowTask);
             }
+
+            await Promise.all(rowPromises);
         };
 
-        for (let i = 0; i < rows + columns; i++) generateDiagonalCells(i);
-        await sleep((rows + columns + (brightnessAnimation.length - 1)) * animateFrameSpeed + (randomAnimationDelay * 4));
+        await generateSlideAnimation();
+        await sleep((brightnessAnimation.length - 1) * animateFrameSpeed + (randomAnimationDelay * 4));
 
         const setCellBrightness = (rowIndex, columnIndex, brightness) => {
             const row = contributionTable.children[rowIndex];

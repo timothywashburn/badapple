@@ -42,7 +42,9 @@
     {
       "resources": [
         "assets/video_data.json",
-        "assets/badapple.mp3"
+        "assets/test_476x360_genshin.json",
+        "assets/badapple.mp3",
+        "assets/genshin_badapple.mp3"
       ],
       "matches": [
         "https://github.com/*"

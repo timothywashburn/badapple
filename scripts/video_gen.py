@@ -3,9 +3,9 @@ import cv2
 import numpy as np
 import json
 
-input_file = 'dev/【東方】Bad Apple!! ＰＶ【影絵】.mp4'
+input_file = '../dev/genshin.mp4'
 # input_file = 'dev/test.mp4'
-output_file = 'video_data.json'
+output_file = '../assets/video_data_genshin.json'
 capture = cv2.VideoCapture(input_file)
 total_frames = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
 
@@ -50,5 +50,5 @@ while capture.isOpened():
 
 capture.release()
 
-with open('video_data.json', 'w') as f:
+with open('../assets/video_data_genshin.json', 'w') as f:
     json.dump(video_data, f, separators=(',', ':'), ensure_ascii=False)

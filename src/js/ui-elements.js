@@ -32,7 +32,7 @@ function createUIElements() {
     const description = document.createElement('span');
     description.setAttribute('data-view-component', 'true');
     description.className = 'ActionListItem-description';
-    description.textContent = 'Turning on Bad Apple!! will play Bad Apple!! with your GitHub contribution graph.';
+    description.textContent = 'Turning on Bad Apple!! will play Bad Apple Genshin version!! with your GitHub contribution graph.';
 
     descWrap.appendChild(label);
     descWrap.appendChild(description);
@@ -51,8 +51,8 @@ function createUIElements() {
 
 function setupEventListeners(uiElements, contributionTable) {
     const { button, visualSpan, description } = uiElements;
-    const inactiveText = 'Turning on Bad Apple!! will play Bad Apple!! with your GitHub contribution graph.';
-    const activeText = 'Turning off Bad Apple!! will stop playing Bad Apple!! with your GitHub contribution graph.';
+    const inactiveText = 'Turning on Bad Apple!! will play Bad Apple Genshin version!! with your GitHub contribution graph.';
+    const activeText = 'Turning off Bad Apple!! will stop playing Bad Apple Genshin version!! with your GitHub contribution graph.';
 
     button.addEventListener('click', async () => {
         if (hasLabel('running')) {
